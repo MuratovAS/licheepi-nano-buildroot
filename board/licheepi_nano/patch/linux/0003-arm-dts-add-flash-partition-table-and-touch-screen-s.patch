@@ -1,0 +1,227 @@
+From 5c043901fef2ff9a8467e407eb5321857f7473bb Mon Sep 17 00:00:00 2001
+From: greedyhao <hao_kr@163.com>
+Date: Tue, 30 Jul 2019 10:03:50 +0800
+Subject: [PATCH 03/18] arm:dts:add flash partition table and touch screen
+ support
+
+---
+ .../boot/dts/suniv-f1c100s-licheepi-nano.dts  | 84 +++++++++++++++++--
+ arch/arm/boot/dts/suniv-f1c100s.dtsi          | 49 +++++++++++
+ drivers/mtd/spi-nor/winbond.c                 |  4 +-
+ 3 files changed, 129 insertions(+), 8 deletions(-)
+
+diff --git a/arch/arm/boot/dts/suniv-f1c100s-licheepi-nano.dts b/arch/arm/boot/dts/suniv-f1c100s-licheepi-nano.dts
+index ca644541a140..4744a303082d 100644
+--- a/arch/arm/boot/dts/suniv-f1c100s-licheepi-nano.dts
++++ b/arch/arm/boot/dts/suniv-f1c100s-licheepi-nano.dts
+@@ -6,6 +6,8 @@
+ /dts-v1/;
+ #include "suniv-f1c100s.dtsi"
+ #include <dt-bindings/gpio/gpio.h>
++#include <dt-bindings/input/input.h>
++#include <dt-bindings/interrupt-controller/irq.h>
+ 
+ / {
+ 	model = "Lichee Pi Nano";
+@@ -13,6 +15,7 @@ / {
+ 
+ 	aliases {
+ 		serial0 = &uart0;
++		spi0 = &spi0;
+ 	};
+ 
+ 	chosen {
+@@ -54,6 +57,80 @@ &de {
+ 	status = "okay";
+ };
+ 
++&i2c0 {
++    pinctrl-0 = <&i2c0_pins>;
++    pinctrl-names = "default";
++    status = "okay";
++
++    gt911: touchscreen@14 {
++        compatible = "goodix,gt911";
++        reg = <0x14>;
++        interrupt-parent = <&pio>;
++        interrupts = <4 10 IRQ_TYPE_EDGE_FALLING>; /* (PE10) */
++        pinctrl-names = "default";
++        //pinctrl-0 = <&ts_reset_pin>;
++        irq-gpios = <&pio 4 10 GPIO_ACTIVE_HIGH>; /* (PE10) */
++        reset-gpios = <&pio 4 9 GPIO_ACTIVE_HIGH>; /* RST (PE9) */
++        /* touchscreen-swapped-x-y */
++    };
++};
++
++&mmc0 {
++	vmmc-supply = <&reg_vcc3v3>;
++	bus-width = <4>;
++	broken-cd;
++	status = "okay";
++};
++
++&pio {
++    ts_reset_pin: ts_reset_pin@0 {
++        pins = "PE9";
++        function = "gpio_out";
++    };
++};
++
++&spi0 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&spi0_pins_a>;
++	status = "okay";
++
++	flash: w25q128@0 {
++		#address-cells = <1>;
++		#size-cells = <1>;
++		compatible = "winbond,w25q128", "jedec,spi-nor";
++		reg = <0>;
++		spi-max-frequency = <50000000>;
++		partitions {
++			compatible = "fixed-partitions";
++			#address-cells = <1>;
++			#size-cells = <1>;
++
++			partition@0 {
++				label = "u-boot";
++				reg = <0x000000 0x100000>;
++				read-only;
++			};
++
++			partition@100000 {
++				label = "dtb";
++				reg = <0x100000 0x10000>;
++				read-only;
++			};
++
++			partition@110000 {
++				label = "kernel";
++				reg = <0x110000 0x400000>;
++				read-only;
++			};
++
++			partition@520000 {
++				label = "rootfs";
++				reg = <0x510000 0xAF0000>;
++			};
++		};
++	};
++};
++
+ &tcon0 {
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&lcd_rgb666_pins>;
+@@ -67,13 +144,6 @@ tcon0_out_lcd: endpoint@0 {
+ 	};
+ };
+ 
+-&mmc0 {
+-	vmmc-supply = <&reg_vcc3v3>;
+-	bus-width = <4>;
+-	broken-cd;
+-	status = "okay";
+-};
+-
+ &uart0 {
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&uart0_pe_pins>;
+diff --git a/arch/arm/boot/dts/suniv-f1c100s.dtsi b/arch/arm/boot/dts/suniv-f1c100s.dtsi
+index 26d8e5577c03..97d1b98e08db 100644
+--- a/arch/arm/boot/dts/suniv-f1c100s.dtsi
++++ b/arch/arm/boot/dts/suniv-f1c100s.dtsi
+@@ -71,6 +71,32 @@ otg_sram: sram-section@0 {
+ 			};
+ 		};
+ 
++		spi0: spi@1c05000 {
++			compatible = "allwinner,suniv-spi",
++				     "allwinner,sun8i-h3-spi";
++			reg = <0x01c05000 0x1000>;
++			interrupts = <10>;
++			clocks = <&ccu CLK_BUS_SPI0>, <&ccu CLK_BUS_SPI0>;
++			clock-names = "ahb", "mod";
++			resets = <&ccu RST_BUS_SPI0>;
++			status = "disabled";
++			#address-cells = <1>;
++			#size-cells = <0>;
++		};
++
++		spi1: spi@1c06000 {
++			compatible = "allwinner,suniv-spi",
++				     "allwinner,sun8i-h3-spi";
++			reg = <0x01c06000 0x1000>;
++			interrupts = <11>;
++			clocks = <&ccu CLK_BUS_SPI1>, <&ccu CLK_BUS_SPI1>;
++			clock-names = "ahb", "mod";
++			resets = <&ccu RST_BUS_SPI1>;
++			status = "disabled";
++			#address-cells = <1>;
++			#size-cells = <0>;
++		};
++
+ 		tcon0: lcd-controller@1c0c000 {
+ 			compatible = "allwinner,suniv-f1c100s-tcon";
+ 			reg = <0x01c0c000 0x1000>;
+@@ -116,6 +142,19 @@ ccu: clock@1c20000 {
+ 			#reset-cells = <1>;
+ 		};
+ 
++		i2c0: i2c@1C27000 {
++			compatible = "allwinner,sun6i-a31-i2c";
++			reg = <0x01C27000 0x400>;
++			interrupts = <7>;
++			clocks = <&ccu CLK_BUS_I2C0>;
++			resets = <&ccu RST_BUS_I2C0>;
++			pinctrl-names = "default";
++			pinctrl-0 = <&i2c0_pins>;
++			status = "disabled";
++			#address-cells = <1>;
++			#size-cells = <0>;
++		};
++
+ 		intc: interrupt-controller@1c20400 {
+ 			compatible = "allwinner,suniv-f1c100s-ic";
+ 			reg = <0x01c20400 0x400>;
+@@ -134,6 +173,11 @@ pio: pinctrl@1c20800 {
+ 			#interrupt-cells = <3>;
+ 			#gpio-cells = <3>;
+ 
++			i2c0_pins: i2c0 {
++				pins = "PE11", "PE12";
++				function = "i2c0";
++            };
++
+ 			uart0_pe_pins: uart0-pe-pins {
+ 				pins = "PE0", "PE1";
+ 				function = "uart0";
+@@ -152,6 +196,11 @@ mmc0_pins: mmc0-pins {
+ 				pins = "PF0", "PF1", "PF2", "PF3", "PF4", "PF5";
+ 				function = "mmc0";
+ 			};
++
++			spi0_pins_a: spi0-pins-pc {
++				pins = "PC0", "PC1", "PC2", "PC3";
++				function = "spi0";
++			};
+ 		};
+ 
+ 		timer@1c20c00 {
+diff --git a/drivers/mtd/spi-nor/winbond.c b/drivers/mtd/spi-nor/winbond.c
+index e5dfa786f190..008df3090420 100644
+--- a/drivers/mtd/spi-nor/winbond.c
++++ b/drivers/mtd/spi-nor/winbond.c
+@@ -87,7 +87,9 @@ static const struct flash_info winbond_parts[] = {
+ 			    SPI_NOR_HAS_LOCK | SPI_NOR_HAS_TB) },
+ 	{ "w25q80", INFO(0xef5014, 0, 64 * 1024,  16, SECT_4K) },
+ 	{ "w25q80bl", INFO(0xef4014, 0, 64 * 1024,  16, SECT_4K) },
+-	{ "w25q128", INFO(0xef4018, 0, 64 * 1024, 256, SECT_4K) },
++	// no sector size per http://nano.lichee.pro/build_sys/build_flash.html?highlight=sect_4k#id16
++	// { "w25q128", INFO(0xef4018, 0, 64 * 1024, 256, SECT_4K) },
++	{ "w25q128", INFO(0xef4018, 0, 64 * 1024, 256, 0) },
+ 	{ "w25q256", INFO(0xef4019, 0, 64 * 1024, 512,
+ 			  SECT_4K | SPI_NOR_DUAL_READ | SPI_NOR_QUAD_READ)
+ 	  .fixups = &w25q256_fixups },
+-- 
+2.41.0
+

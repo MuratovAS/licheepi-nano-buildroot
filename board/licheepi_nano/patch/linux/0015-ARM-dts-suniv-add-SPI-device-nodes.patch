@@ -1,0 +1,40 @@
+From 36a211a2eb618387994ba6f748e200ea47a3902f Mon Sep 17 00:00:00 2001
+From: Icenowy Zheng <icenowy@aosc.io>
+Date: Sat, 20 Jan 2018 00:23:35 +0800
+Subject: [PATCH 15/18] ARM: dts: suniv: add SPI device nodes
+
+The suniv SoC has two SPI controllers like the one in H3, but with no
+dedicated mod clock (the SPI clock input is the AHB bus clock).
+
+Add the device tree nodes.
+
+Signed-off-by: Icenowy Zheng <icenowy@aosc.io>
+---
+ arch/arm/boot/dts/suniv-f1c100s.dtsi | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/arch/arm/boot/dts/suniv-f1c100s.dtsi b/arch/arm/boot/dts/suniv-f1c100s.dtsi
+index a1d0f7173d6d..c247c470a3cf 100644
+--- a/arch/arm/boot/dts/suniv-f1c100s.dtsi
++++ b/arch/arm/boot/dts/suniv-f1c100s.dtsi
+@@ -73,7 +73,7 @@ otg_sram: sram-section@0 {
+ 		};
+ 
+ 		spi0: spi@1c05000 {
+-			compatible = "allwinner,suniv-spi",
++			compatible = "allwinner,suniv-f1c100s-spi",
+ 				     "allwinner,sun8i-h3-spi";
+ 			reg = <0x01c05000 0x1000>;
+ 			interrupts = <10>;
+@@ -86,7 +86,7 @@ spi0: spi@1c05000 {
+ 		};
+ 
+ 		spi1: spi@1c06000 {
+-			compatible = "allwinner,suniv-spi",
++			compatible = "allwinner,suniv-f1c100s-spi",
+ 				     "allwinner,sun8i-h3-spi";
+ 			reg = <0x01c06000 0x1000>;
+ 			interrupts = <11>;
+-- 
+2.41.0
+

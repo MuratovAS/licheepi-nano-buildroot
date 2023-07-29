@@ -1,0 +1,26 @@
+From d0ef6a1396b89f3ba39217f07431ea1c330fc066 Mon Sep 17 00:00:00 2001
+From: Nick Matantsev <nick.matantsev@gmail.com>
+Date: Thu, 17 Feb 2022 06:51:06 +0000
+Subject: [PATCH 09/18] Extra comment on LRADC config
+
+---
+ arch/arm/boot/dts/suniv-f1c100s-licheepi-nano.dts | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/arch/arm/boot/dts/suniv-f1c100s-licheepi-nano.dts b/arch/arm/boot/dts/suniv-f1c100s-licheepi-nano.dts
+index 15abfa7d3de3..a30f61bf0d51 100644
+--- a/arch/arm/boot/dts/suniv-f1c100s-licheepi-nano.dts
++++ b/arch/arm/boot/dts/suniv-f1c100s-licheepi-nano.dts
+@@ -96,7 +96,8 @@ &lradc {
+ 
+ 	/*
+ 	// example keymap for low-resolution ADC input driver, customize this for your hardware
+-	// (different voltage levels on LRADC pins correspond to different emitted keyboard codes, up to 3 volt)
++	// (pulling voltage down to different levels 0V-2V on LRADC pin causes this to emit different
++	// keyboard codes - pull pin back up to 3.3V when button is off)
+ 	button-200 {
+ 		label = "Volume Up";
+ 		linux,code = <KEY_VOLUMEUP>;
+-- 
+2.41.0
+

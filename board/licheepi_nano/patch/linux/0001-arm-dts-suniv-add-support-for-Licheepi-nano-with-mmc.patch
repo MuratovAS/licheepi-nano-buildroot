@@ -1,0 +1,319 @@
+From 46fba470621554ac6545c33397d73b9fd4c0ba89 Mon Sep 17 00:00:00 2001
+From: greedyhao <hao_kr@163.com>
+Date: Mon, 29 Jul 2019 09:59:51 +0800
+Subject: [PATCH 01/18] arm:dts:suniv:add support for Licheepi nano with mmc
+ and lcd controller
+
+---
+ .../boot/dts/suniv-f1c100s-licheepi-nano.dts  |  55 ++++++
+ arch/arm/boot/dts/suniv-f1c100s.dtsi          | 164 +++++++++++++++++-
+ 2 files changed, 212 insertions(+), 7 deletions(-)
+
+diff --git a/arch/arm/boot/dts/suniv-f1c100s-licheepi-nano.dts b/arch/arm/boot/dts/suniv-f1c100s-licheepi-nano.dts
+index a1154e6c7cb5..ca644541a140 100644
+--- a/arch/arm/boot/dts/suniv-f1c100s-licheepi-nano.dts
++++ b/arch/arm/boot/dts/suniv-f1c100s-licheepi-nano.dts
+@@ -5,6 +5,7 @@
+ 
+ /dts-v1/;
+ #include "suniv-f1c100s.dtsi"
++#include <dt-bindings/gpio/gpio.h>
+ 
+ / {
+ 	model = "Lichee Pi Nano";
+@@ -17,6 +18,60 @@ aliases {
+ 	chosen {
+ 		stdout-path = "serial0:115200n8";
+ 	};
++
++	panel: panel {
++		compatible = "lg,lb070wv8", "simple-panel";
++		#address-cells = <1>;
++		#size-cells = <0>;
++		enable-gpios = <&pio 4 6 GPIO_ACTIVE_HIGH>;
++		power-supply = <&reg_vcc3v3>;
++
++ 		port@0 {
++			reg = <0>;
++			#address-cells = <1>;
++			#size-cells = <0>;
++
++ 			panel_input: endpoint@0 {
++				reg = <0>;
++				remote-endpoint = <&tcon0_out_lcd>;
++			};
++		};
++	};
++
++	reg_vcc3v3: vcc3v3 {
++		compatible = "regulator-fixed";
++		regulator-name = "vcc3v3";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++	};
++};
++
++&be0 {
++	status = "okay";
++};
++
++&de {
++	status = "okay";
++};
++
++&tcon0 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&lcd_rgb666_pins>;
++	status = "okay";
++};
++
++&tcon0_out {
++	tcon0_out_lcd: endpoint@0 {
++		reg = <0>;
++		remote-endpoint = <&panel_input>;
++	};
++};
++
++&mmc0 {
++	vmmc-supply = <&reg_vcc3v3>;
++	bus-width = <4>;
++	broken-cd;
++	status = "okay";
+ };
+ 
+ &uart0 {
+diff --git a/arch/arm/boot/dts/suniv-f1c100s.dtsi b/arch/arm/boot/dts/suniv-f1c100s.dtsi
+index 6100d3b75f61..26d8e5577c03 100644
+--- a/arch/arm/boot/dts/suniv-f1c100s.dtsi
++++ b/arch/arm/boot/dts/suniv-f1c100s.dtsi
+@@ -4,6 +4,9 @@
+  * Copyright 2018 Mesih Kilinc <mesihkilinc@gmail.com>
+  */
+ 
++#include <dt-bindings/clock/suniv-ccu-f1c100s.h>
++#include <dt-bindings/reset/suniv-ccu-f1c100s.h>
++
+ / {
+ 	#address-cells = <1>;
+ 	#size-cells = <1>;
+@@ -31,6 +34,12 @@ cpu {
+ 			device_type = "cpu";
+ 		};
+ 	};
++	
++	de: display-engine {
++		compatible = "allwinner,suniv-f1c100s-display-engine";
++		allwinner,pipelines = <&fe0>;
++		status = "disabled";
++	};
+ 
+ 	soc {
+ 		compatible = "simple-bus";
+@@ -62,6 +71,42 @@ otg_sram: sram-section@0 {
+ 			};
+ 		};
+ 
++		tcon0: lcd-controller@1c0c000 {
++			compatible = "allwinner,suniv-f1c100s-tcon";
++			reg = <0x01c0c000 0x1000>;
++			interrupts = <29>;
++			clocks = <&ccu CLK_BUS_LCD>,
++				 <&ccu CLK_TCON>;
++			clock-names = "ahb",
++				      "tcon-ch0";
++			clock-output-names = "tcon-pixel-clock";
++			resets = <&ccu RST_BUS_LCD>;
++			reset-names = "lcd";
++			status = "disabled";
++
++			ports {
++				#address-cells = <1>;
++				#size-cells = <0>;
++
++				tcon0_in: port@0 {
++					#address-cells = <1>;
++					#size-cells = <0>;
++					reg = <0>;
++
++					tcon0_in_be0: endpoint@0 {
++						reg = <0>;
++						remote-endpoint = <&be0_out_tcon0>;
++					};
++				};
++
++				tcon0_out: port@1 {
++					#address-cells = <1>;
++					#size-cells = <0>;
++					reg = <1>;
++				};
++			};
++		};
++
+ 		ccu: clock@1c20000 {
+ 			compatible = "allwinner,suniv-f1c100s-ccu";
+ 			reg = <0x01c20000 0x400>;
+@@ -82,7 +127,7 @@ pio: pinctrl@1c20800 {
+ 			compatible = "allwinner,suniv-f1c100s-pinctrl";
+ 			reg = <0x01c20800 0x400>;
+ 			interrupts = <38>, <39>, <40>;
+-			clocks = <&ccu 37>, <&osc24M>, <&osc32k>;
++			clocks = <&ccu CLK_BUS_PIO>, <&osc24M>, <&osc32k>;
+ 			clock-names = "apb", "hosc", "losc";
+ 			gpio-controller;
+ 			interrupt-controller;
+@@ -93,6 +138,20 @@ uart0_pe_pins: uart0-pe-pins {
+ 				pins = "PE0", "PE1";
+ 				function = "uart0";
+ 			};
++			
++			lcd_rgb666_pins: lcd-rgb666-pins {
++				pins = "PD0", "PD1", "PD2", "PD3", "PD4",
++				       "PD5", "PD6", "PD7", "PD8", "PD9",
++				       "PD10", "PD11", "PD12", "PD13", "PD14",
++				       "PD15", "PD16", "PD17", "PD18", "PD19",
++				       "PD20", "PD21";
++				function = "lcd";
++			};
++			
++			mmc0_pins: mmc0-pins {
++				pins = "PF0", "PF1", "PF2", "PF3", "PF4", "PF5";
++				function = "mmc0";
++			};
+ 		};
+ 
+ 		timer@1c20c00 {
+@@ -102,6 +161,28 @@ timer@1c20c00 {
+ 			clocks = <&osc24M>;
+ 		};
+ 
++		mmc0: mmc@1c0f000 {
++			compatible = "allwinner,suniv-f1c100s-mmc",
++				     "allwinner,sun7i-a20-mmc";
++			reg = <0x01c0f000 0x1000>;
++			clocks = <&ccu CLK_BUS_MMC0>,
++				 <&ccu CLK_MMC0>,
++				 <&ccu CLK_MMC0_OUTPUT>,
++				 <&ccu CLK_MMC0_SAMPLE>;
++			clock-names = "ahb",
++					      "mmc",
++					      "output",
++				    	  "sample";
++			resets = <&ccu RST_BUS_MMC0>;
++			reset-names = "ahb";
++			interrupts = <23>;
++			pinctrl-names = "default";
++			pinctrl-0 = <&mmc0_pins>;
++			status = "disabled";
++			#address-cells = <1>;
++			#size-cells = <0>;
++		};
++
+ 		wdt: watchdog@1c20ca0 {
+ 			compatible = "allwinner,suniv-f1c100s-wdt",
+ 				     "allwinner,sun4i-a10-wdt";
+@@ -114,8 +195,8 @@ uart0: serial@1c25000 {
+ 			interrupts = <1>;
+ 			reg-shift = <2>;
+ 			reg-io-width = <4>;
+-			clocks = <&ccu 38>;
+-			resets = <&ccu 24>;
++			clocks = <&ccu CLK_BUS_UART0>;
++			resets = <&ccu RST_BUS_UART0>;
+ 			status = "disabled";
+ 		};
+ 
+@@ -125,8 +206,8 @@ uart1: serial@1c25400 {
+ 			interrupts = <2>;
+ 			reg-shift = <2>;
+ 			reg-io-width = <4>;
+-			clocks = <&ccu 39>;
+-			resets = <&ccu 25>;
++			clocks = <&ccu CLK_BUS_UART1>;
++			resets = <&ccu RST_BUS_UART1>;
+ 			status = "disabled";
+ 		};
+ 
+@@ -136,9 +217,78 @@ uart2: serial@1c25800 {
+ 			interrupts = <3>;
+ 			reg-shift = <2>;
+ 			reg-io-width = <4>;
+-			clocks = <&ccu 40>;
+-			resets = <&ccu 26>;
++			clocks = <&ccu CLK_BUS_UART2>;
++			resets = <&ccu RST_BUS_UART2>;
+ 			status = "disabled";
+ 		};
++		fe0: display-frontend@1e00000 {
++			compatible = "allwinner,suniv-f1c100s-display-frontend";
++			reg = <0x01e00000 0x20000>;
++			interrupts = <30>;
++			clocks = <&ccu CLK_BUS_DE_FE>, <&ccu CLK_DE_FE>,
++				 <&ccu CLK_DRAM_DE_FE>;
++			clock-names = "ahb", "mod",
++				      "ram";
++			resets = <&ccu RST_BUS_DE_FE>;
++			status = "disabled";
++
++			ports {
++				#address-cells = <1>;
++				#size-cells = <0>;
++
++				fe0_out: port@1 {
++					#address-cells = <1>;
++					#size-cells = <0>;
++					reg = <1>;
++
++					fe0_out_be0: endpoint@0 {
++						reg = <0>;
++						remote-endpoint = <&be0_in_fe0>;
++					};
++				};
++			};
++		};
++
++		be0: display-backend@1e60000 {
++			compatible = "allwinner,suniv-f1c100s-display-backend";
++			reg = <0x01e60000 0x10000>;
++			reg-names = "be";
++			interrupts = <31>;
++			clocks = <&ccu CLK_BUS_DE_BE>, <&ccu CLK_DE_BE>,
++				 <&ccu CLK_DRAM_DE_BE>;
++			clock-names = "ahb", "mod",
++				      "ram";
++			resets = <&ccu RST_BUS_DE_BE>;
++			reset-names = "be";
++			assigned-clocks = <&ccu CLK_DE_BE>;
++			assigned-clock-rates = <300000000>;
++
++			ports {
++				#address-cells = <1>;
++				#size-cells = <0>;
++
++				be0_in: port@0 {
++					#address-cells = <1>;
++					#size-cells = <0>;
++					reg = <0>;
++
++					be0_in_fe0: endpoint@0 {
++						reg = <0>;
++						remote-endpoint = <&fe0_out_be0>;
++					};
++				};
++
++				be0_out: port@1 {
++					#address-cells = <1>;
++					#size-cells = <0>;
++					reg = <1>;
++
++					be0_out_tcon0: endpoint@0 {
++						reg = <0>;
++						remote-endpoint = <&tcon0_in_be0>;
++					};
++				};
++			};
++		};
+ 	};
+ };
+-- 
+2.41.0
+

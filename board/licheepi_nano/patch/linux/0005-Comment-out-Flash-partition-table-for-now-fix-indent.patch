@@ -1,0 +1,47 @@
+From 3f49047d4702f0f8b394fbd5fc4764e08c3ea0b8 Mon Sep 17 00:00:00 2001
+From: Nick Matantsev <nick.matantsev@gmail.com>
+Date: Sat, 6 Mar 2021 20:30:58 -0500
+Subject: [PATCH 05/18] Comment out Flash partition table for now, fix
+ indentation
+
+---
+ arch/arm/boot/dts/suniv-f1c100s-licheepi-nano.dts | 2 ++
+ arch/arm/boot/dts/suniv-f1c100s.dtsi              | 2 +-
+ 2 files changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/arch/arm/boot/dts/suniv-f1c100s-licheepi-nano.dts b/arch/arm/boot/dts/suniv-f1c100s-licheepi-nano.dts
+index 06085f09b036..3848cf297dca 100644
+--- a/arch/arm/boot/dts/suniv-f1c100s-licheepi-nano.dts
++++ b/arch/arm/boot/dts/suniv-f1c100s-licheepi-nano.dts
+@@ -122,6 +122,7 @@ button-800 {
+ 	};
+ };
+ 
++/* commented out by @unframework, should be ifdef
+ &spi0 {
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&spi0_pins_a>;
+@@ -163,6 +164,7 @@ partition@520000 {
+ 		};
+ 	};
+ };
++*/
+ 
+ &tcon0 {
+ 	pinctrl-names = "default";
+diff --git a/arch/arm/boot/dts/suniv-f1c100s.dtsi b/arch/arm/boot/dts/suniv-f1c100s.dtsi
+index 6d1d7919b9e8..91e308ba907e 100644
+--- a/arch/arm/boot/dts/suniv-f1c100s.dtsi
++++ b/arch/arm/boot/dts/suniv-f1c100s.dtsi
+@@ -177,7 +177,7 @@ pio: pinctrl@1c20800 {
+ 			i2c0_pins: i2c0 {
+ 				pins = "PE11", "PE12";
+ 				function = "i2c0";
+-            };
++			};
+ 
+ 			uart0_pe_pins: uart0-pe-pins {
+ 				pins = "PE0", "PE1";
+-- 
+2.41.0
+

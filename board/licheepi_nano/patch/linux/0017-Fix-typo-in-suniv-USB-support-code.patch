@@ -1,0 +1,26 @@
+From 4d1ad88d8a876cac6e8a1ade8b0233c301eb9625 Mon Sep 17 00:00:00 2001
+From: George Hilliard <thirtythreeforty@gmail.com>
+Date: Wed, 24 Jul 2019 14:27:31 -0500
+Subject: [PATCH 17/18] Fix typo in suniv USB support code
+
+Signed-off-by: George Hilliard <thirtythreeforty@gmail.com>
+---
+ drivers/usb/musb/sunxi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/usb/musb/sunxi.c b/drivers/usb/musb/sunxi.c
+index 2a55b4fe7ff4..76806b781844 100644
+--- a/drivers/usb/musb/sunxi.c
++++ b/drivers/usb/musb/sunxi.c
+@@ -724,7 +724,7 @@ static int sunxi_musb_probe(struct platform_device *pdev)
+ 
+ 	if (of_device_is_compatible(np, "allwinner,sun8i-a33-musb") ||
+ 	    of_device_is_compatible(np, "allwinner,sun8i-h3-musb") ||
+-	    of_device_is_compatible(np, "allwinner,suniv-musb")) {
++	    of_device_is_compatible(np, "allwinner,suniv-f1c100s-musb")) {
+ 		set_bit(SUNXI_MUSB_FL_HAS_RESET, &glue->flags);
+ 		set_bit(SUNXI_MUSB_FL_NO_CONFIGDATA, &glue->flags);
+ 	}
+-- 
+2.41.0
+

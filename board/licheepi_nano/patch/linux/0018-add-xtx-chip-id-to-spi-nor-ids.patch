@@ -1,0 +1,28 @@
+From 09a4dd825c5e7d4104a4f0203d067c51a8c12d49 Mon Sep 17 00:00:00 2001
+From: florpor <florist.powers@gmail.com>
+Date: Thu, 30 Apr 2020 14:28:21 +0300
+Subject: [PATCH 18/18] add xtx chip id to spi-nor-ids
+
+some licheepi nanos come with an xtx chips instead of a winbond ones. it is compatible enough and needs no other code changes
+---
+ drivers/mtd/spi-nor/winbond.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/drivers/mtd/spi-nor/winbond.c b/drivers/mtd/spi-nor/winbond.c
+index 008df3090420..96ddd8ee2f0c 100644
+--- a/drivers/mtd/spi-nor/winbond.c
++++ b/drivers/mtd/spi-nor/winbond.c
+@@ -99,6 +99,10 @@ static const struct flash_info winbond_parts[] = {
+ 			     SECT_4K | SPI_NOR_DUAL_READ | SPI_NOR_QUAD_READ) },
+ 	{ "w25m512jv", INFO(0xef7119, 0, 64 * 1024, 1024,
+ 			    SECT_4K | SPI_NOR_QUAD_READ | SPI_NOR_DUAL_READ) },
++
++	/* XTX */
++	/* commented out by @unframework while porting florpor/linux#licheepi-nano-v5.4.140 */
++	/* { "xt25f128b", INFO(0x0b4018, 0, 64 * 1024, 256, SECT_4K) },*/
+ };
+ 
+ /**
+-- 
+2.41.0
+

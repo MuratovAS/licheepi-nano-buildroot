@@ -1,0 +1,44 @@
+From 451fe1ea5ba0614966c309a028363ff812bf723d Mon Sep 17 00:00:00 2001
+From: Icenowy Zheng <icenowy@aosc.io>
+Date: Sat, 20 Jan 2018 00:26:54 +0800
+Subject: [PATCH 16/18] ARM: suniv: f1c100s: enable SPI flash on Lichee Pi Nano
+
+The Lichee Pi Nano board has a Winbond W25Q128FVSIQ 128Mbit SPI NOR flash
+connected to the SPI0 controller of F1C100s SoC, via the pinmux group at
+PC bank; so it's bootable.
+
+Enable this SPI flash.
+
+Signed-off-by: Icenowy Zheng <icenowy@aosc.io>
+---
+ arch/arm/boot/dts/suniv-f1c100s-licheepi-nano.dts | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+
+diff --git a/arch/arm/boot/dts/suniv-f1c100s-licheepi-nano.dts b/arch/arm/boot/dts/suniv-f1c100s-licheepi-nano.dts
+index 438e09f9c24f..801d71121eb3 100644
+--- a/arch/arm/boot/dts/suniv-f1c100s-licheepi-nano.dts
++++ b/arch/arm/boot/dts/suniv-f1c100s-licheepi-nano.dts
+@@ -193,6 +193,20 @@ &otg_sram {
+ 	status = "okay";
+ };
+ 
++&spi0 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&spi0_pins_a>;
++	status = "okay";
++
++	flash@0 {
++		#address-cells = <1>;
++		#size-cells = <1>;
++		compatible = "winbond,w25q128", "jedec,spi-nor";
++		reg = <0>;
++		spi-max-frequency = <40000000>;
++	};
++};
++
+ &uart0 {
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&uart0_pe_pins>;
+-- 
+2.41.0
+

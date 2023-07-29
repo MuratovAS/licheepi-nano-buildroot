@@ -1,0 +1,70 @@
+From b50c78b9a49070598fbc5affabe5de8e5886c0e7 Mon Sep 17 00:00:00 2001
+From: Icenowy Zheng <icenowy@aosc.io>
+Date: Fri, 19 Jan 2018 21:27:44 +0800
+Subject: [PATCH 14/18] ARM: dts: suniv: add support for MMC controllers
+
+The suniv SoC has two MMC controllers like the ones in A20/A23/A33 SoC.
+
+Add device tree nodes for them.
+
+Signed-off-by: Icenowy Zheng <icenowy@aosc.io>
+---
+ arch/arm/boot/dts/suniv-f1c100s.dtsi | 28 ++++++++++++++++++++++++----
+ 1 file changed, 24 insertions(+), 4 deletions(-)
+
+diff --git a/arch/arm/boot/dts/suniv-f1c100s.dtsi b/arch/arm/boot/dts/suniv-f1c100s.dtsi
+index e51050f083a1..a1d0f7173d6d 100644
+--- a/arch/arm/boot/dts/suniv-f1c100s.dtsi
++++ b/arch/arm/boot/dts/suniv-f1c100s.dtsi
+@@ -192,7 +192,7 @@ lcd_rgb666_pins: lcd-rgb666-pins {
+ 				       "PD20", "PD21";
+ 				function = "lcd";
+ 			};
+-			
++
+ 			mmc0_pins: mmc0-pins {
+ 				pins = "PF0", "PF1", "PF2", "PF3", "PF4", "PF5";
+ 				function = "mmc0";
+@@ -220,9 +220,9 @@ mmc0: mmc@1c0f000 {
+ 				 <&ccu CLK_MMC0_OUTPUT>,
+ 				 <&ccu CLK_MMC0_SAMPLE>;
+ 			clock-names = "ahb",
+-					      "mmc",
+-					      "output",
+-				    	  "sample";
++				      "mmc",
++				      "output",
++				      "sample";
+ 			resets = <&ccu RST_BUS_MMC0>;
+ 			reset-names = "ahb";
+ 			interrupts = <23>;
+@@ -233,6 +233,26 @@ mmc0: mmc@1c0f000 {
+ 			#size-cells = <0>;
+ 		};
+ 
++		mmc1: mmc@1c10000 {
++			compatible = "allwinner,suniv-f1c100s-mmc",
++				     "allwinner,sun7i-a20-mmc";
++			reg = <0x01c10000 0x1000>;
++			clocks = <&ccu CLK_BUS_MMC1>,
++				 <&ccu CLK_MMC1>,
++				 <&ccu CLK_MMC1_OUTPUT>,
++				 <&ccu CLK_MMC1_SAMPLE>;
++			clock-names = "ahb",
++				      "mmc",
++				      "output",
++				      "sample";
++			resets = <&ccu RST_BUS_MMC1>;
++			reset-names = "ahb";
++			interrupts = <24>;
++			status = "disabled";
++			#address-cells = <1>;
++			#size-cells = <0>;
++		};
++
+ 		wdt: watchdog@1c20ca0 {
+ 			compatible = "allwinner,suniv-f1c100s-wdt",
+ 				     "allwinner,sun4i-a10-wdt";
+-- 
+2.41.0
+
